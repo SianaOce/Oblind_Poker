@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QListWidget, QLabel, QListWidgetItem, QAbstractItemView, QGridLayout
+from PySide6.QtWidgets import QWidget, QListWidget, QLabel, QListWidgetItem, QAbstractItemView, QGridLayout, \
+    QSpacerItem, QSizePolicy
 from PySide6.QtGui import QFont, QColor, Qt, QPainter
 from PySide6.QtCharts import QChart, QPieSeries, QPieSlice, QChartView
 
@@ -79,7 +80,9 @@ class MainWindow(QWidget):
 
     def create_widgets(self):
         self.list_game = QListWidget()
-        self.gain_tot = QLabel()
+        self.spacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.gain_tot = QLabel("")
+        self.spacer2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
     def modify_widgets(self):
 
@@ -89,11 +92,12 @@ class MainWindow(QWidget):
             self.list_game.addItem(item)
 
         self.list_game.setSelectionMode(QAbstractItemView.MultiSelection)
-        self.list_game.setMinimumWidth(150)
-        self.list_game.setMaximumWidth(200)
-        self.list_game.setStyleSheet("font-size: 14px")
-
+        self.list_game.setMinimumWidth(210)
+        self.list_game.setMaximumWidth(300)
+        self.list_game.setMinimumHeight(500)
+        self.list_game.setStyleSheet("font-size: 18px")
         self.gain_tot.setAlignment(Qt.AlignRight)
+        self.gain_tot.setObjectName("lbl_result")
 
     def create_layouts(self):
         self.main_layout = QGridLayout(self)
@@ -101,8 +105,10 @@ class MainWindow(QWidget):
 
     def add_widgets_to_layouts(self):
         self.main_layout.addWidget(self.list_game, 0, 0)
-        self.main_layout.addWidget(self.gain_tot, 1, 0)
-        self.main_layout.addLayout(self.pies_layout, 0, 1, 2, 2)
+        self.main_layout.addItem(self.spacer, 1, 0)
+        self.main_layout.addWidget(self.gain_tot, 2, 0)
+        self.main_layout.addItem(self.spacer, 3, 0)
+        self.main_layout.addLayout(self.pies_layout, 0, 1, 4, 2)
 
     def setup_connections(self):
         self.list_game.itemClicked.connect(self.choice_game)
@@ -119,7 +125,7 @@ class MainWindow(QWidget):
 
     def build_pie(self, l_g):
 
-        #supprimer l'ensemble des graphiques
+        # supprimer l'ensemble des graphiques
         if self.pie:
             for w in self.pie:
                 self.pie.remove(w)
@@ -134,8 +140,6 @@ class MainWindow(QWidget):
             else:
                 self.pies_layout.addWidget(self.pie[x], 1, x - 2)
 
-
-
         if l_g:
 
             z = 0
@@ -147,9 +151,9 @@ class MainWindow(QWidget):
                     gain = (game[2] / info_game[1]) * info_game[2]
                     sum_game[game[1]] = round(sum_game.get(game[1], 0) + gain, 2)
                 sort_gain = sorted(sum_game.items(), key=lambda t: t[1], reverse=True)
-                l_text = ""
+                l_text = "<br>"
                 for txt in sort_gain:
-                    l_text = l_text + f"{txt[0]} ► {txt[1]} €<br>"
+                    l_text = l_text + f"{txt[0]} ►  {txt[1]:.2f} €<br>"
                 self.gain_tot.setText(l_text)
 
                 pie = ResultPie(result_game, info_game)
@@ -157,4 +161,4 @@ class MainWindow(QWidget):
                 self.pie[z].setVisible(True)
                 z += 1
         else:
-            self.gain_tot.setText("")
+            self.gain_tot.setText("-")

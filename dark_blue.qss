@@ -950,6 +950,18 @@ QLabel:disabled {
   color: rgba(255, 255, 255, 0.2)
 }
 
+QLabel#lbl_result {
+ font-family:Roboto;
+ color:#448aff;
+ font-size: 32px;
+ border: 3px solid #448aff;
+ border-radius:5px;
+ padding: 5px;
+}
+
+
+
+
 /*  ------------------------------------------------------------------------  */
 /*  VLines and HLinex  */
 
