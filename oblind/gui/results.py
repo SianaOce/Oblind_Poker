@@ -107,7 +107,7 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.list_game, 0, 0)
         self.main_layout.addItem(self.spacer, 1, 0)
         self.main_layout.addWidget(self.gain_tot, 2, 0)
-        self.main_layout.addItem(self.spacer, 3, 0)
+        self.main_layout.addItem(self.spacer2, 3, 0)
         self.main_layout.addLayout(self.pies_layout, 0, 1, 4, 2)
 
     def setup_connections(self):
