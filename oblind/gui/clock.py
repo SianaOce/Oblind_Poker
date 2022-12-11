@@ -84,7 +84,7 @@ class ChronoWindow(QWidget):
         metrics_blind = QFontMetrics(font_blind)
         font_timeblind = QFont('TSCu_Comic', 172)
         metrics_timeblind = QFontMetrics(font_timeblind)
-        font_nextblind = QFont('TSCu_Comic', 36)
+        font_nextblind = QFont('TSCu_Comic', 40)
         metrics_nextblind = QFontMetrics(font_nextblind)
         font_gametime = QFont('TSCu_Comic', 88)
         metrics_gametime = QFontMetrics(font_gametime)
@@ -208,7 +208,7 @@ class ChronoWindow(QWidget):
             chips_use = [[f"{key}.png", item['value']] for key, item in list_chips().items() if item['n_use'] != 0]
             sort_chips_use = sorted(chips_use, key=lambda val: val[1])
 
-            pos = 655
+            pos = 955 - len(sort_chips_use)*75
             for j in sort_chips_use:
                 self.image_jeton = QGraphicsPixmapItem(
                     QPixmap(os.path.join(CONFIG_DIR, j[0])).scaled(150, 150, mode=Qt.SmoothTransformation))
@@ -216,7 +216,7 @@ class ChronoWindow(QWidget):
                 self.scene.addItem(self.image_jeton)
                 pos += 75
 
-            pos = 695
+            pos = 995 - len(sort_chips_use)*75
             for i in sort_chips_use:
                 self.val_jeton = QGraphicsTextItem("► " + str(i[1]))
                 self.val_jeton.setFont(font_nextblind)
