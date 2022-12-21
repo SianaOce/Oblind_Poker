@@ -5,8 +5,10 @@ from datetime import datetime
 from oblind.constants import CONFIG_DIR
 
 
-# creation de la base de donnees POKER (table Joueurs,Parties,Resultats)
 def create_db():
+    """
+    Fonction créant la base de donnees POKER en SQL (3 tables Joueurs, Parties, Résultats)
+    """
     if not os.path.exists(CONFIG_DIR):
         os.makedirs(CONFIG_DIR)
 
@@ -45,6 +47,10 @@ def create_db():
 
 
 def add_player_db(name, lastname, date, avatar):
+    """
+    Fonction ajoutant un joueur à la base de données
+    """
+
     if not os.path.isfile(os.path.join(CONFIG_DIR, "POKER.db")):
         create_db()
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
@@ -56,6 +62,9 @@ def add_player_db(name, lastname, date, avatar):
 
 
 def modify_player_db(name, lastname, avatar, id_p):
+    """
+    Fonction modifiant un joueur à la base de données
+    """
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     cursor.execute("UPDATE Joueurs SET Nom = ?, Prenom = ?, Avatar = ? WHERE Joueurs_Id = ?",
@@ -65,6 +74,9 @@ def modify_player_db(name, lastname, avatar, id_p):
 
 
 def delete_player_db(id_p):
+    """
+    Fonction supprimant un joueur de la base de données
+    """
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     cursor.execute("DELETE FROM Joueurs WHERE Joueurs_Id = ?",
@@ -73,16 +85,18 @@ def delete_player_db(id_p):
     connection.close()
 
 
-# fonction pour recuperer un dictionnaire des joueurs presents dans la BD POKER
-# cle id du joueur
-# valeurs : (cle,valeur)
-#           ("name", nom) , -> str
-#           ("lastname", prenom) , -> str
-#           ("date_create", date de creation),
-#           ("avatar", chemin du fichier image sur le disque representant l'avatar), -> str
-#           ("seated", participation à la partie) -> bool par defaut False
-
 def list_players_db():
+    """
+    Fonction retournant un dictionnaire des joueurs présents dans la BD
+    clé : id du joueur
+
+    valeurs : (clé,valeur)
+              ("name", nom) , → str
+              ("lastname", prénom) , → str
+              ("date_create", date de creation), → str
+              ("avatar", chemin du fichier image sur le disque représentant l'avatar), → str
+              ("seated", participation à la partie) → bool par défaut False
+    """
     players = {}
     if not os.path.isfile(os.path.join(CONFIG_DIR, "POKER.db")):
         create_db()
@@ -95,9 +109,11 @@ def list_players_db():
     return players
 
 
-# fonction pour récuperer une liste triée par nb de jetons des joueurs participants et jetons restants à une partie "id_game"
-
 def list_players_game(id_game):
+    """
+    Fonction pour récupérer une liste triée par nb de jetons descendants
+    des joueurs participants et jetons restants à une partie
+    """
     players = []
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
@@ -105,8 +121,7 @@ def list_players_game(id_game):
                     SELECT Joueurs_Id, Prenom, JetonFinPartie
                     FROM Resultats 
                     INNER JOIN Joueurs ON Resultats.Joueur_Id = Joueurs.Joueurs_Id 
-                    WHERE Partie_Id = ?"""
-                            , (id_game,)).fetchall()
+                    WHERE Partie_Id = ?""", (id_game,)).fetchall()
     connection.close()
     for x in p_list:
         players.append((x[0], x[1], x[2]))
@@ -114,9 +129,11 @@ def list_players_game(id_game):
     return sort_players_game
 
 
-# Fonction de mise à jour de la BD des tables Parties et Resultats
-# pour ajouter la nouvelle partie et les joueurs participants
 def save_start_game_db(buy_in, chips, list_player):
+    """
+    Fonction de mise à jour des tables Parties et Résultats de la BD
+    pour ajouter la nouvelle partie et les joueurs participants
+    """
     date_game = datetime.now().strftime("%d %m %Y %H:%M")
 
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
@@ -134,35 +151,40 @@ def save_start_game_db(buy_in, chips, list_player):
     return id_game
 
 
-# Fonction de mise à jour de la BD de la tables resultats
-# Arguments : Joueur_Id, Partie_Id, Nb_Jeton
 def save_result_db(nb_chip, player, game):
+    """
+    Fonction de mise à jour de la BD de la table résultats
+    """
+
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     cursor.execute("""UPDATE Resultats
                    SET JetonFinPartie = ?
-                   WHERE Joueur_Id = ? AND Partie_Id = ?"""
-                   , (nb_chip, player, game))
+                   WHERE Joueur_Id = ? AND Partie_Id = ?""", (nb_chip, player, game))
     connection.commit()
     connection.close()
 
 
-# Fonction pour recuperer le nombre de jetons d'une partie et la valeur de cave correspondante
-def cave_info(Parties_Id):
+#
+def cave_info(parties_id):
+    """
+    Fonction pour récupérer le nombre de jetons d'une partie et la valeur de cave correspondante
+    """
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     _list = cursor.execute("""
                     SELECT Date, NbJetonCave, PrixCave, Parties_Id
                     FROM Parties
-                    WHERE Parties_Id = ?"""
-                           , (Parties_Id,)).fetchall()
+                    WHERE Parties_Id = ?""", (parties_id,)).fetchall()
     connection.commit()
     connection.close()
     return _list[0]
 
 
-# Fonction pour recuperer une liste des parties de la DB
 def list_game():
+    """
+    Fonction pour récupérer une liste des parties de la BD
+    """
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     _list = cursor.execute("""SELECT Parties_Id, Date FROM Parties""").fetchall()
