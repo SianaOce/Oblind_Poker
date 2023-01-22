@@ -247,7 +247,7 @@ class ChronoWindow(QWidget):
                 nextblind = ""
                 if self.level + 1 < self.nb_lvl:
 
-                    nextblind += str(timedelta(minutes=self.struct[f"lvl_{2}"][0])) + "  " + str(
+                    nextblind += str(timedelta(minutes=self.struct[f"lvl_{self.level + 2}"][0])) + "  " + str(
                         self.struct[f"lvl_{self.level + 2}"][1])
                     if self.struct[f"lvl_{self.level + 2}"][2] != "":
                         nextblind += " (" + str(self.struct[f"lvl_{self.level + 2}"][2]) + ")"

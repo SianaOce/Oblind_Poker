@@ -1,7 +1,7 @@
 from oblind.constants import TIME_SPAN, SB_BB, ANTES
 
 
-# Fonction pour trier les niveaux de SB/BB dans l'ordre croissant et retourner la liste des niveau et leur nombre
+# Fonction pour trier les niveaux de SB/BB dans l'ordre croissant et retourner la liste des niveaux et leur nombre
 def sort_sb_bb(levels):
     n = 0
     for i in range(0, 9):
