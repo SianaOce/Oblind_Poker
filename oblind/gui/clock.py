@@ -286,8 +286,6 @@ class ChronoWindow(QWidget):
             self.time0 += self.time_step / 1000
             self.time1 += self.time_step / 1000
 
-            print(self.time0-self.time1)
-
             self.display_timer(init=False)
         elif self.level + 1 < self.nb_lvl:
             self.time0 = -0.1
