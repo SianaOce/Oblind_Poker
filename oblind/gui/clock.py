@@ -5,14 +5,15 @@ from math import pi, cos, sin
 
 from PIL import Image, ImageQt
 from PySide6.QtCore import Qt, QTimerEvent, QBasicTimer
-from PySide6.QtWidgets import QWidget, QGraphicsScene, QHBoxLayout, QSpinBox, QPushButton, \
-    QGraphicsTextItem, QGraphicsView, QGraphicsPixmapItem, QGraphicsEllipseItem
-from PySide6.QtGui import QColor, QPainter, QFont, QPen, QPixmap, QBrush, QFontMetrics, QKeyEvent
+from PySide6.QtWidgets import QWidget, QGraphicsScene, QVBoxLayout, QSpinBox, QPushButton, \
+    QGraphicsTextItem, QGraphicsView, QGraphicsPixmapItem, QGraphicsEllipseItem, QMessageBox, QSizePolicy
+from PySide6.QtGui import QColor, QPainter, QFont, QPen, QPixmap, QBrush, QFontMetrics, QKeyEvent, QMouseEvent, QCursor, \
+    QIcon
 
 from oblind.constants import CONFIG_DIR
 from oblind.gui.drawtable import Table, calc_coord
 from oblind.gui import results
-from oblind.bdsql import save_result_db, list_players_game, cave_info, list_players_db
+from oblind.bdsql import save_result_db, list_players_game, cave_info, list_players_db, save_add_cave
 from oblind.chips import list_chips
 
 
@@ -22,11 +23,15 @@ class ChronoWindow(QWidget):
         super().__init__()
         self.id_game = id_game
         self.setWindowFlags(Qt.FramelessWindowHint)
+
         with open(os.path.join(CONFIG_DIR, f"{self.id_game}.json")) as json_file:
             self.struct = json.load(json_file)
 
         self.w = 1900
         self.h = 1020
+
+        self.font_pts_recave = QFont('TSCu_Comic', 32)
+        self.metrics_pts_recave = QFontMetrics(self.font_pts_recave)
 
         self.nb_lvl = self.struct["Nb_Lvl"]
         self.time_t = timedelta(minutes=self.struct["Tps_Tot"])
@@ -35,10 +40,10 @@ class ChronoWindow(QWidget):
         self.time1 = 0
         self.level = 0
         self.setup_ui()
-        self.move(w / 2 - self.sizeHint().width() / 2, h / 2 - self.sizeHint().height() / 2)
 
         self.time_step = 100
         self.game_progress = True
+
 
     def setup_ui(self):
         self.create_widgets()
@@ -51,8 +56,6 @@ class ChronoWindow(QWidget):
         self.scene = QGraphicsScene()
         self.scene.setBackgroundBrush(QColor("#121212"))
         self.graph_window = QGraphicsView(self.scene)
-        self.graph_window.setMinimumWidth(1900)
-        self.graph_window.setMinimumHeight(980)
         self.timer = QBasicTimer()
 
     def modify_widgets(self):
@@ -60,7 +63,7 @@ class ChronoWindow(QWidget):
         self.graph_window.setRenderHints(QPainter.Antialiasing)
 
     def create_layouts(self):
-        self.layout = QHBoxLayout(self)
+        self.layout = QVBoxLayout(self)
 
     def add_widgets_to_layouts(self):
         self.layout.addWidget(self.graph_window)
@@ -128,7 +131,6 @@ class ChronoWindow(QWidget):
                 self.scene.addItem(self.list_circle1[i])
 
             # -----------Affichage du texte de blind en cours----------------------------------------
-
             blind = str(self.struct[f"lvl_{1}"][1])
             if self.struct[f"lvl_{1}"][2] != "":
                 blind += " (" + str(self.struct[f"lvl_{1}"][2]) + ")"
@@ -141,7 +143,6 @@ class ChronoWindow(QWidget):
             self.scene.addItem(self.text_blind)
 
             # Affichage du texte du temps restant de la blind en cours------------------------
-
             text_timeblind = str(timedelta(minutes=self.struct[f"lvl_{1}"][0]))
 
             self.text_timeblind = QGraphicsTextItem(text_timeblind)
@@ -171,7 +172,6 @@ class ChronoWindow(QWidget):
             self.scene.addItem(self.text_nextblind)
 
             # -----------"Progress circular" temps total----------------------------------------
-
             back_circle2 = QGraphicsEllipseItem(9 * self.w / 10 - self.h / 6, self.h / 5 - self.h / 6, self.h / 3 + 2,
                                                 self.h / 3 + 2)
             back_circle2.setPen(pen_back_circle2)
@@ -204,11 +204,10 @@ class ChronoWindow(QWidget):
             self.scene.addItem(self.text_gametime)
 
             # -----------Affichage jetons
-
             chips_use = [[f"{key}.png", item['value']] for key, item in list_chips().items() if item['n_use'] != 0]
             sort_chips_use = sorted(chips_use, key=lambda val: val[1])
 
-            pos = 955 - len(sort_chips_use)*75
+            pos = 955 - len(sort_chips_use) * 75
             for j in sort_chips_use:
                 self.image_jeton = QGraphicsPixmapItem(
                     QPixmap(os.path.join(CONFIG_DIR, j[0])).scaled(150, 150, mode=Qt.SmoothTransformation))
@@ -216,7 +215,7 @@ class ChronoWindow(QWidget):
                 self.scene.addItem(self.image_jeton)
                 pos += 75
 
-            pos = 995 - len(sort_chips_use)*75
+            pos = 995 - len(sort_chips_use) * 75
             for i in sort_chips_use:
                 self.val_jeton = QGraphicsTextItem("► " + str(i[1]))
                 self.val_jeton.setFont(font_nextblind)
@@ -227,10 +226,36 @@ class ChronoWindow(QWidget):
 
             self.scene.setSceneRect(0, 0, self.w, self.h)
 
+            # -----------Affichage joueurs si recave possible
+            if cave_info(self.id_game)[4]:
+                self.avatar = []
+                self.pts_recave = []
+
+                list_j = list_players_game(self.id_game)
+
+                size = 110 - 5*len(list_j)
+                pos2 = 1890 - len(list_j) * (size+2)
+
+                for x in range(len(list_j)):
+                    self.pts_recave.append(QGraphicsTextItem())
+                    self.pts_recave[x].setPlainText("'" * (list_j[x][3] + 1))
+                    self.pts_recave[x].setDefaultTextColor(QColor("#861de9"))
+                    self.pts_recave[x].setFont(self.font_pts_recave)
+                    self.pts_recave[x].setPos(pos2, 1010)
+                    self.scene.addItem(self.pts_recave[x])
+
+                    self.avatar.append(self.CaveAvatar(
+                        QPixmap(os.path.join(CONFIG_DIR, list_players_db()[list_j[x][0]]["avatar"])).scaled(
+                            size, size, mode=Qt.SmoothTransformation), list_j[x], self.id_game, self.pts_recave[x]
+                    ))
+                    self.avatar[x].setPos(pos2, 1010-size)
+                    self.scene.addItem(self.avatar[x])
+
+                    pos2 += size+2
+
         else:
 
             # Mise à jour temps/circular bar
-
             if self.time0 == 0:
                 for i in range(3001):
                     self.list_circle1[i].setVisible(False)
@@ -320,10 +345,13 @@ class ChronoWindow(QWidget):
         self.font2 = QFont('Arial', int(self.w_s / 50))
         self.metrics2 = QFontMetrics(self.font2)
 
-        self.spin_score = {}
         self.chip_max = int(cave_info(self.id_game)[1]) * len(list_j)
-
+        if cave_info(self.id_game)[4]:
+            nb_cave = sum([x[3] for x in list_j])
+            self.chip_max += int(cave_info(self.id_game)[1]) * nb_cave
+            
         im = []
+        self.spin_score = {}
 
         for x in range(len(list_j)):
 
@@ -425,12 +453,43 @@ class ChronoWindow(QWidget):
                 self.logo_pause.setVisible(True)
                 self.timer.stop()
 
+    class CaveAvatar(QGraphicsPixmapItem):
+
+        def __init__(self, pixmap, id_player, id_game, text_nbcave):
+            super().__init__(pixmap)
+            self.id_player = id_player
+            self.id_game = id_game
+            self.text_nbcave = text_nbcave
+            self.setCursor(QCursor(Qt.PointingHandCursor))
+
+        def mouseDoubleClickEvent(self, e):
+            msgBoxConfirm = QMessageBox()
+            msgBoxConfirm.setWindowFlags(Qt.FramelessWindowHint)
+            msgBoxConfirm.setIcon(QMessageBox.Icon.Question)
+            msgBoxConfirm.setInformativeText(
+                f"<br>"
+                f"<b>{self.id_player[1]}</b> paye {cave_info(self.id_game)[2]} €<br>"
+                f"pour une {self.id_player[3] + 2}<sup>ème</sup> cave de {cave_info(self.id_game)[1]} jetons ?<br>")
+            addCave = msgBoxConfirm.addButton("Oui", QMessageBox.YesRole)
+            addCave.setMinimumWidth(250)
+            msgBoxConfirm.addButton("Non", QMessageBox.RejectRole)
+            msgBoxConfirm.exec()
+            if msgBoxConfirm.clickedButton() == addCave:
+                self.id_player = (self.id_player[0], self.id_player[1], self.id_player[2], self.id_player[3] + 1)
+                save_add_cave(self.id_player[3], self.id_player[0], self.id_game)
+                self.text_nbcave.setPlainText("'" * (self.id_player[3] + 1))
+
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication
 
     app = QApplication()
+
+    with open("../../dark_blue.qss", "r") as file:
+        _style = file.read()
+        app.setStyleSheet(_style)
     ecran = app.screens()[0]
-    win = ChronoWindow(19, 1920, 960)
+    win = ChronoWindow(15, 1920, 1080)
     win.showMaximized()
     app.exec()
+

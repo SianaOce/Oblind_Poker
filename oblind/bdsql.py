@@ -29,7 +29,8 @@ def create_db():
             Parties_Id	INTEGER PRIMARY KEY AUTOINCREMENT,
             Date	TEXT,
             NbJetonCave	INTEGER,
-            PrixCave	INTEGER
+            PrixCave	INTEGER,
+            Recave  INTEGER
             )
             """)
     cursor.execute("""
@@ -38,6 +39,7 @@ def create_db():
             Joueur_Id	INTEGER,
             Partie_Id	INTEGER,
             JetonFinPartie	INTEGER,
+            NbRecave INTEGER,
             FOREIGN KEY(Partie_Id) REFERENCES Parties(Parties_Id),
             FOREIGN KEY(Joueur_Id) REFERENCES Joueurs(Joueurs_Id)
             )
@@ -118,18 +120,18 @@ def list_players_game(id_game):
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     p_list = cursor.execute("""
-                    SELECT Joueurs_Id, Prenom, JetonFinPartie
+                    SELECT Joueurs_Id, Prenom, JetonFinPartie, NbRecave
                     FROM Resultats 
                     INNER JOIN Joueurs ON Resultats.Joueur_Id = Joueurs.Joueurs_Id 
                     WHERE Partie_Id = ?""", (id_game,)).fetchall()
     connection.close()
     for x in p_list:
-        players.append((x[0], x[1], x[2]))
+        players.append((x[0], x[1], x[2], x[3]))
     sort_players_game = sorted(players, key=lambda score: score[2], reverse=True)
     return sort_players_game
 
 
-def save_start_game_db(buy_in, chips, list_player):
+def save_start_game_db(buy_in, chips, list_player, recave):
     """
     Fonction de mise à jour des tables Parties et Résultats de la BD
     pour ajouter la nouvelle partie et les joueurs participants
@@ -138,17 +140,36 @@ def save_start_game_db(buy_in, chips, list_player):
 
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
-    cursor.execute("INSERT INTO Parties (Date, NbJetonCave, PrixCave) VALUES (?,?,?)",
-                   (date_game, chips, buy_in))
+    cursor.execute("INSERT INTO Parties (Date, NbJetonCave, PrixCave, Recave) VALUES (?,?,?,?)",
+                   (date_game, chips, buy_in, recave))
     id_game = cursor.lastrowid
 
+    nb_recave = None
+    if recave:
+        nb_recave = 0
+
     for j in list_player:
-        cursor.execute("INSERT INTO Resultats (Joueur_Id, Partie_Id, JetonFinPartie) VALUES (?,?,?)",
-                       (j, id_game, 0))
+        cursor.execute("INSERT INTO Resultats (Joueur_Id, Partie_Id, JetonFinPartie,  NbRecave) VALUES (?,?,?,?)",
+                       (j, id_game, 0, nb_recave))
     connection.commit()
     connection.close()
 
     return id_game
+
+
+def save_add_cave(nb_recave ,player, game):
+    """
+    Fonction pour mettre à jour la table Resultats après une recave
+    :param player:
+    :param game:
+    """
+    connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
+    cursor = connection.cursor()
+    cursor.execute("""UPDATE Resultats
+                   SET NbRecave = ?
+                   WHERE Joueur_Id = ? AND Partie_Id = ?""", (nb_recave, player, game))
+    connection.commit()
+    connection.close()
 
 
 def save_result_db(nb_chip, player, game):
@@ -173,7 +194,7 @@ def cave_info(parties_id):
     connection = sqlite3.connect(os.path.join(CONFIG_DIR, "POKER.db"))
     cursor = connection.cursor()
     _list = cursor.execute("""
-                    SELECT Date, NbJetonCave, PrixCave, Parties_Id
+                    SELECT Date, NbJetonCave, PrixCave, Parties_Id, Recave
                     FROM Parties
                     WHERE Parties_Id = ?""", (parties_id,)).fetchall()
     connection.commit()

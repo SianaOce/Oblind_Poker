@@ -52,7 +52,7 @@ class MainWindow(QWidget):
         self.lbl_about_logo.setPixmap(about)
 
         self.lbl_about_logo.setAlignment(Qt.AlignRight)
-        self.lbl_about_txt.setText("<i> 7 déc 2022 V0.9 </i>")
+        self.lbl_about_txt.setText("<i> 14 mars 2023 v1.1.0 </i>")
         self.lbl_about_txt.setStyleSheet("font-size: 14px")
         self.lbl_about_txt.setAlignment(Qt.AlignRight)
 

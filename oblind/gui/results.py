@@ -5,7 +5,7 @@ from PySide6.QtCharts import QChart, QPieSeries, QPieSlice, QChartView
 
 from oblind.bdsql import list_players_game, cave_info, list_game
 
-font_1 = QFont("DejaVu Sans Condensed", 14)
+font_1 = QFont("DejaVu Sans Condensed", 12)
 font_2 = QFont("DejaVu Sans Condensed", 10)
 font_3 = QFont("DejaVu Sans Condensed", 8)
 
@@ -21,9 +21,17 @@ class ResultPie(QChart):
         nb = len(result_game)
         score = [(i[2] / info_game[1]) * info_game[2] for i in result_game]
         result_legend = [str(i[2]) + " - " + i[1] for i in result_game]
-        legend_names = [f"{i[1]} ► {i[2]} ► {round((i[2] / info_game[1]) * info_game[2], 2)} €" for i in result_game]
+        legend_names = [f"<u>{i[1]}</u> - {i[2]}<br>{round((i[2] / info_game[1]) * info_game[2], 2)} €" for i in
+                        result_game]
 
-        self.titre_pie = f"<u>Partie {info_game[3]}</u> : {info_game[0]} | <u>Cave</u> : {info_game[1]} jetons ► {info_game[2]} €"
+        self.trecave = "sans"
+        if info_game[4]:
+            self.trecave = "avec"
+            legend_names = [f"<u>{i[1]}</u> - {i[2]}<br>{round((i[2] / info_game[1]) * info_game[2], 2)} €" \
+                            f" <i>({round((1 + i[3]) * info_game[2], 2)} €)</i>" for i in result_game]
+
+        self.titre_pie = f"<u>Partie {info_game[3]} du {info_game[0]} {self.trecave} recave</u> | " \
+                         f"<i>{info_game[1]} jetons {info_game[2]} €</i>"
 
         self.series1 = QPieSeries()
         self.setTheme(QChart.ChartThemeBlueCerulean)
@@ -95,7 +103,7 @@ class MainWindow(QWidget):
         self.list_game.setMinimumWidth(210)
         self.list_game.setMaximumWidth(300)
         self.list_game.setMinimumHeight(500)
-        self.list_game.setStyleSheet("font-size: 18px")
+        self.list_game.setStyleSheet("font-size: 16px")
         self.gain_tot.setAlignment(Qt.AlignRight)
         self.gain_tot.setObjectName("lbl_result")
 
@@ -150,6 +158,7 @@ class MainWindow(QWidget):
                 for game in result_game:
                     gain = (game[2] / info_game[1]) * info_game[2]
                     sum_game[game[1]] = round(sum_game.get(game[1], 0) + gain, 2)
+
                 sort_gain = sorted(sum_game.items(), key=lambda t: t[1], reverse=True)
                 l_text = "<br>"
                 for txt in sort_gain:

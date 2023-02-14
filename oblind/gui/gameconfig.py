@@ -10,6 +10,8 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QListWidget, QGra
     QComboBox, QSpinBox, QGraphicsTextItem, QDoubleSpinBox, QPushButton, QListWidgetItem, QGraphicsView, \
     QGraphicsPixmapItem, QGraphicsSimpleTextItem, QSpacerItem, QSizePolicy
 
+from oblind.gui.py_toggle import py_toggle
+
 from oblind.constants import CONFIG_DIR, SB_BB, ANTES, TIME_SPAN
 from oblind.chips import list_chips, chip_maj_use, chip_maj_nb, chip_maj_val, chips_init_use, value_cave, \
     nbchips_cave
@@ -50,11 +52,13 @@ class ConfigWindow(QWidget):
 
         self.player_listwidget = QListWidget()
         self.player_listwidget.setMinimumWidth(250)
+
         self.scene = QGraphicsScene()
         self.visuel_table = QGraphicsView(self.scene)
         self.visuel_table.setMinimumWidth(1200)
         self.visuel_table.setMinimumHeight(700)
-        self.group_level = QGroupBox()
+
+        self.group_level = QGroupBox("Blinds")
 
         self.verticalSpacer1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.label_niveau = QLabel("LvL")
@@ -73,12 +77,12 @@ class ConfigWindow(QWidget):
         self.verticalSpacer2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.label_total_time = QLabel()
 
-        self.group_cave = QGroupBox()
-        self.label_tpye_jeton = QLabel("Type de jeton ► ")
-        self.label_value_chip = QLabel("Valeur par jeton ► ")
-        self.label_nb_chip = QLabel("Nombre par joueur  ► ")
-        self.label0_value_chip_by_cave = QLabel("Valeur par cave  ► ")
-        self.label0_qty_chip = QLabel("Disponibles en stock ► ")
+        self.group_chips = QGroupBox("Jetons")
+        self.label_type_jeton = QLabel("Couleur : ")
+        self.label_value_chip = QLabel("Valeur : ")
+        self.label_nb_chip = QLabel("Nombre par joueur : ")
+        self.label0_value_chip_by_cave = QLabel("Valeur par cave : ")
+        self.label0_qty_chip = QLabel("Stock : ")
 
         self.combo_image_chip = []
         self.spin_nb_chip = []
@@ -93,13 +97,20 @@ class ConfigWindow(QWidget):
             self.label_value_chip_by_cave.append(QLabel())
             self.label_qty_chip.append(QLabel())
 
-        self.label_resume_cave = QLabel()
-        self.label_price = QLabel("Prix ► ")
+        self.group_cave = QGroupBox("Cave")
+
+        self.label_cave_jeton = QLabel()
+        self.label_cave_value = QLabel()
+        self.label_cave_price = QLabel("Prix :")
         self.spin_buyin = QDoubleSpinBox()
         self.horizontalSpacer1 = QSpacerItem(40, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.horizontalSpacer2 = QSpacerItem(40, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.horizontalSpacer3 = QSpacerItem(40, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
+        self.group_launch_game = QGroupBox()
+
+        self.label_recave = QLabel("Recave")
+        self.toggle_recave = py_toggle.PyToggle()
         self.start_btn = QPushButton("Start")
 
     def modify_widgets(self):
@@ -142,7 +153,7 @@ class ConfigWindow(QWidget):
 
             self.combo_image_chip[i].addItem("-")
             self.combo_image_chip[i].setCurrentIndex(self.combo_image_chip[i].count() - 1)
-            self.spin_nb_chip[i].setRange(0, 100)
+            self.spin_nb_chip[i].setRange(1, 100)
             self.spin_nb_chip[i].setAlignment(Qt.AlignCenter)
             self.spin_value_chip[i].setRange(0, 1000)
             self.spin_value_chip[i].setAlignment(Qt.AlignCenter)
@@ -159,14 +170,16 @@ class ConfigWindow(QWidget):
     def create_layouts(self):
         self.layout_window = QGridLayout(self)
         self.layout_blind_structure = QGridLayout(self.group_level)
-        self.layout_blind_structure.setVerticalSpacing(5)
-        self.layout_cave_chips = QGridLayout(self.group_cave)
+        self.layout_blind_structure.setVerticalSpacing(10)
+        self.layout_chips = QGridLayout(self.group_chips)
+        self.layout_cave = QGridLayout(self.group_cave)
+        self.layout_launch_game = QGridLayout(self.group_launch_game)
 
     def add_widgets_to_layouts(self):
 
         self.layout_window.addWidget(self.player_listwidget, 1, 1, 1, 1)
-        self.layout_window.addWidget(self.visuel_table, 1, 2, 1, 1)
-        self.layout_window.addWidget(self.group_level, 1, 3, 1, 1)
+        self.layout_window.addWidget(self.visuel_table, 1, 2, 1, 3)
+        self.layout_window.addWidget(self.group_level, 1, 5, 1, 1)
         self.layout_blind_structure.addItem(self.verticalSpacer1, 1, 1, 1, 4)
         self.layout_blind_structure.addWidget(self.label_niveau, 2, 1, 1, 1)
         self.layout_blind_structure.addWidget(self.label_duree, 2, 2, 1, 1)
@@ -180,28 +193,34 @@ class ConfigWindow(QWidget):
         self.layout_blind_structure.addItem(self.verticalSpacer2, 13, 1, 1, 4)
         self.layout_blind_structure.addWidget(self.label_total_time, 14, 1, 1, 4, Qt.AlignVCenter | Qt.AlignCenter)
 
-        self.layout_window.addWidget(self.group_cave, 2, 1, 1, 2)
-        self.layout_cave_chips.addItem(self.horizontalSpacer1, 1, 1, 1, 1)
-        self.layout_cave_chips.addWidget(self.label_tpye_jeton, 1, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
-        self.layout_cave_chips.addWidget(self.label_nb_chip, 2, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
-        self.layout_cave_chips.addWidget(self.label_value_chip, 3, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
-        self.layout_cave_chips.addWidget(self.label0_value_chip_by_cave, 4, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
-        self.layout_cave_chips.addWidget(self.label0_qty_chip, 5, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
+        self.layout_window.addWidget(self.group_chips, 2, 1, 1, 3)
+        self.layout_chips.addItem(self.horizontalSpacer1, 1, 1, 1, 1)
+        self.layout_chips.addWidget(self.label_type_jeton, 1, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
+        self.layout_chips.addWidget(self.label_value_chip, 2, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
+        self.layout_chips.addWidget(self.label_nb_chip, 3, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
+        self.layout_chips.addWidget(self.label0_value_chip_by_cave, 4, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
+        self.layout_chips.addWidget(self.label0_qty_chip, 5, 2, 1, 1, Qt.AlignVCenter | Qt.AlignRight)
 
         for i in range(0, 4):
-            self.layout_cave_chips.addWidget(self.combo_image_chip[i], 1, i + 3, 1, 1)
-            self.layout_cave_chips.addWidget(self.spin_nb_chip[i], 2, i + 3, 1, 1)
-            self.layout_cave_chips.addWidget(self.spin_value_chip[i], 3, i + 3, 1, 1)
-            self.layout_cave_chips.addWidget(self.label_value_chip_by_cave[i], 4, i + 3, 1, 1,
-                                             Qt.AlignVCenter | Qt.AlignCenter)
-            self.layout_cave_chips.addWidget(self.label_qty_chip[i], 5, i + 3, 1, 1, Qt.AlignVCenter | Qt.AlignCenter)
+            self.layout_chips.addWidget(self.combo_image_chip[i], 1, i + 3, 1, 1)
+            self.layout_chips.addWidget(self.spin_value_chip[i], 2, i + 3, 1, 1)
+            self.layout_chips.addWidget(self.spin_nb_chip[i], 3, i + 3, 1, 1)
+            self.layout_chips.addWidget(self.label_value_chip_by_cave[i], 4, i + 3, 1, 1,
+                                        Qt.AlignVCenter | Qt.AlignCenter)
+            self.layout_chips.addWidget(self.label_qty_chip[i], 5, i + 3, 1, 1, Qt.AlignVCenter | Qt.AlignCenter)
 
-        self.layout_cave_chips.addItem(self.horizontalSpacer2, 1, 7, 1, 1)
-        self.layout_cave_chips.addWidget(self.label_resume_cave, 1, 8, 3, 1, Qt.AlignVCenter | Qt.AlignLeft)
-        self.layout_cave_chips.addWidget(self.spin_buyin, 4, 8, 1, 1, Qt.AlignVCenter | Qt.AlignLeft)
-        self.layout_cave_chips.addItem(self.horizontalSpacer3, 1, 9, 4, 1)
+        self.layout_window.addWidget(self.group_cave, 2, 4, 1, 1)
+        self.layout_cave.addItem(self.horizontalSpacer2, 1, 1, 1, 1)
+        self.layout_cave.addWidget(self.label_cave_jeton, 2, 1, 1, 5, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_cave.addWidget(self.label_cave_value, 3, 1, 1, 5, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_cave.addWidget(self.label_cave_price, 4, 1, 1, 1, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_cave.addWidget(self.spin_buyin, 4, 2, 1, 1, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_cave.addItem(self.horizontalSpacer3, 5, 1, 1, 1)
 
-        self.layout_window.addWidget(self.start_btn, 2, 3, 1, 1)
+        self.layout_window.addWidget(self.group_launch_game, 2, 5, 1, 1)
+        self.layout_launch_game.addWidget(self.label_recave, 1, 1, 1, 1, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_launch_game.addWidget(self.toggle_recave, 1, 2, 1, 1, Qt.AlignVCenter | Qt.AlignLeft)
+        self.layout_launch_game.addWidget(self.start_btn, 2, 1, 2, 4)
 
     def setup_connections(self):
 
@@ -362,19 +381,17 @@ class ConfigWindow(QWidget):
             k = self.combo_image_chip[x].currentText()
             v = list_chips().get(k)
             if v:
-                self.label_qty_chip[x].setText(str(v["qty_total"] - v["qty_use"] * len(self.list_players_seated)))
+                rest_jeton = v["qty_total"] - v["qty_use"] * len(self.list_players_seated)
+                rest_cave = rest_jeton // v["qty_use"]
+                self.label_qty_chip[x].setText(f"{rest_jeton} ({rest_cave})")
                 self.label_value_chip_by_cave[x].setText(str(v["value"] * v["qty_use"]))
             else:
                 self.label_qty_chip[x].setText("-")
                 self.label_value_chip_by_cave[x].setText("-")
 
-        self.label_total_time.setText(f"Durée de la partie ► {t_tot}")
-        self.label_resume_cave.setText(f"<h2 align=\"center\"><b><u>Cave</u></b></h2>"
-                                       f"<div>Valeur ► {cave}<br>"
-                                       f"Nombre de jetons ► {nbchips_cave()}<br>"
-                                       f"Type de jeton ► {len(list_chips_use)}<br>"
-                                       f"Prix ▼ </div>"
-                                       )
+        self.label_total_time.setText(f"Durée de la partie : {t_tot}")
+        self.label_cave_jeton.setText(f"Valeur : {cave}")
+        self.label_cave_value.setText(f"Jetons : {nbchips_cave()}")
 
         # Mise à jour item dans
         for x in range(self.player_listwidget.count()):
@@ -467,7 +484,11 @@ class ConfigWindow(QWidget):
         blinds = self.update_level()
         structure = game_structure(blinds)
 
-        id_game = save_start_game_db(buy_in, chips, list_player)
+        recave = False
+        if self.toggle_recave.isChecked():
+            recave = True
+
+        id_game = save_start_game_db(buy_in, chips, list_player, recave)
 
         with open(os.path.join(CONFIG_DIR, f"{id_game}.json"), "w") as write_file:
             json.dump(structure, write_file, indent=4)
