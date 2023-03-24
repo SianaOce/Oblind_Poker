@@ -44,7 +44,6 @@ class ChronoWindow(QWidget):
         self.time_step = 100
         self.game_progress = True
 
-
     def setup_ui(self):
         self.create_widgets()
         self.modify_widgets()
@@ -171,58 +170,61 @@ class ChronoWindow(QWidget):
             self.text_nextblind.setPos(self.w / 2 - w_nextblind / 2, self.h / 2 - h_nextblind / 2 + self.h / 4)
             self.scene.addItem(self.text_nextblind)
 
-            # -----------"Progress circular" temps total----------------------------------------
-            back_circle2 = QGraphicsEllipseItem(9 * self.w / 10 - self.h / 6, self.h / 5 - self.h / 6, self.h / 3 + 2,
-                                                self.h / 3 + 2)
-            back_circle2.setPen(pen_back_circle2)
-            self.scene.addItem(back_circle2)
+            if self.nb_lvl > 1:
 
-            rayon2 = self.h / 6 + 1
-            theta2 = 1.5 * pi
+                # -----------"Progress circular" temps total----------------------------------------
+                back_circle2 = QGraphicsEllipseItem(9 * self.w / 10 - self.h / 6, self.h / 5 - self.h / 6,
+                                                    self.h / 3 + 2,
+                                                    self.h / 3 + 2)
+                back_circle2.setPen(pen_back_circle2)
+                self.scene.addItem(back_circle2)
 
-            self.list_circle2 = []
-            for i in range(3001):
-                theta2 += 2 * pi / 3000
-                x = 9 * self.w / 10 + rayon2 * cos(theta2)
-                y = self.h / 5 + rayon2 * sin(theta2)
-                circle2 = QGraphicsEllipseItem(x, y, 2, 2)
-                circle2.setPen(pen_circle2)
-                circle2.setVisible(False)
-                self.list_circle2.append(circle2)
-                self.scene.addItem(self.list_circle2[i])
+                rayon2 = self.h / 6 + 1
+                theta2 = 1.5 * pi
 
-            # -----------Affichage du texte du temps restant total
-            text_gametime = str(self.time_t)
+                self.list_circle2 = []
+                for i in range(3001):
+                    theta2 += 2 * pi / 3000
+                    x = 9 * self.w / 10 + rayon2 * cos(theta2)
+                    y = self.h / 5 + rayon2 * sin(theta2)
+                    circle2 = QGraphicsEllipseItem(x, y, 2, 2)
+                    circle2.setPen(pen_circle2)
+                    circle2.setVisible(False)
+                    self.list_circle2.append(circle2)
+                    self.scene.addItem(self.list_circle2[i])
 
-            self.text_gametime = QGraphicsTextItem(text_gametime)
-            self.text_gametime.setDefaultTextColor(QColor("#861de9"))
+                # -----------Affichage du texte du temps restant total
+                text_gametime = str(self.time_t)
 
-            w_text_gametime = metrics_gametime.boundingRect(text_gametime).width()
-            h_text_gametime = metrics_gametime.height()
-            self.text_gametime.setFont(font_gametime)
-            self.text_gametime.setPos(9 * self.w / 10 - w_text_gametime / 2, self.h / 5 - h_text_gametime / 2)
-            self.scene.addItem(self.text_gametime)
+                self.text_gametime = QGraphicsTextItem(text_gametime)
+                self.text_gametime.setDefaultTextColor(QColor("#861de9"))
+
+                w_text_gametime = metrics_gametime.boundingRect(text_gametime).width()
+                h_text_gametime = metrics_gametime.height()
+                self.text_gametime.setFont(font_gametime)
+                self.text_gametime.setPos(9 * self.w / 10 - w_text_gametime / 2, self.h / 5 - h_text_gametime / 2)
+                self.scene.addItem(self.text_gametime)
 
             # -----------Affichage jetons
             chips_use = [[f"{key}.png", item['value']] for key, item in list_chips().items() if item['n_use'] != 0]
             sort_chips_use = sorted(chips_use, key=lambda val: val[1])
 
-            pos = 955 - len(sort_chips_use) * 75
+            pos = 955 - len(sort_chips_use) * 85
             for j in sort_chips_use:
                 self.image_jeton = QGraphicsPixmapItem(
                     QPixmap(os.path.join(CONFIG_DIR, j[0])).scaled(150, 150, mode=Qt.SmoothTransformation))
                 self.image_jeton.setPos(10, pos)
                 self.scene.addItem(self.image_jeton)
-                pos += 75
+                pos += 85
 
-            pos = 995 - len(sort_chips_use) * 75
+            pos = 1000 - len(sort_chips_use) * 85
             for i in sort_chips_use:
-                self.val_jeton = QGraphicsTextItem("► " + str(i[1]))
+                self.val_jeton = QGraphicsTextItem(str(i[1]))
                 self.val_jeton.setFont(font_nextblind)
                 self.val_jeton.setDefaultTextColor(QColor("#861de9"))
                 self.val_jeton.setPos(170, pos)
                 self.scene.addItem(self.val_jeton)
-                pos += 75
+                pos += 85
 
             self.scene.setSceneRect(0, 0, self.w, self.h)
 
@@ -233,8 +235,8 @@ class ChronoWindow(QWidget):
 
                 list_j = list_players_game(self.id_game)
 
-                size = 110 - 5*len(list_j)
-                pos2 = 1890 - len(list_j) * (size+2)
+                size = 110 - 5 * len(list_j)
+                pos2 = 1890 - len(list_j) * (size + 2)
 
                 for x in range(len(list_j)):
                     self.pts_recave.append(QGraphicsTextItem())
@@ -248,10 +250,10 @@ class ChronoWindow(QWidget):
                         QPixmap(os.path.join(CONFIG_DIR, list_players_db()[list_j[x][0]]["avatar"])).scaled(
                             size, size, mode=Qt.SmoothTransformation), list_j[x], self.id_game, self.pts_recave[x]
                     ))
-                    self.avatar[x].setPos(pos2, 1010-size)
+                    self.avatar[x].setPos(pos2, 1010 - size)
                     self.scene.addItem(self.avatar[x])
 
-                    pos2 += size+2
+                    pos2 += size + 2
 
         else:
 
@@ -295,14 +297,14 @@ class ChronoWindow(QWidget):
             rep_pre2 = int(3000 * timedelta(seconds=self.time1 - self.time_step / 1000) / self.time_t)
             new_rep2 = int(3000 * timedelta(seconds=self.time1) / self.time_t)
 
-            for i in range(rep_pre2, new_rep2):
-                self.list_circle2[i].setVisible(True)
-
             self.text_timeblind.setPlainText(
                 str(timedelta(minutes=self.struct[f"lvl_{self.level + 1}"][0])
                     - timedelta(seconds=int(self.time0 + self.time_step / 1000))))
-            self.text_gametime.setPlainText(
-                str(self.time_t - timedelta(seconds=int(self.time1 + self.time_step / 1000))))
+            if self.nb_lvl > 1:
+                for i in range(rep_pre2, new_rep2):
+                    self.list_circle2[i].setVisible(True)
+                self.text_gametime.setPlainText(
+                    str(self.time_t - timedelta(seconds=int(self.time1 + self.time_step / 1000))))
 
     def timerEvent(self, event: QTimerEvent) -> None:
 
@@ -349,7 +351,7 @@ class ChronoWindow(QWidget):
         if cave_info(self.id_game)[4]:
             nb_cave = sum([x[3] for x in list_j])
             self.chip_max += int(cave_info(self.id_game)[1]) * nb_cave
-            
+
         im = []
         self.spin_score = {}
 
@@ -492,4 +494,3 @@ if __name__ == "__main__":
     win = ChronoWindow(15, 1920, 1080)
     win.showMaximized()
     app.exec()
-
